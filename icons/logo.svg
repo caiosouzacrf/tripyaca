@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs>
+ <linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E84EA"/><stop offset=".55" stop-color="#7DBBF5"/><stop offset="1" stop-color="#CFE8FC"/></linearGradient>
+ <linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE38A"/><stop offset="1" stop-color="#F5C842"/></linearGradient>
+ <linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FE0C0"/><stop offset="1" stop-color="#3CC596"/></linearGradient>
+ <clipPath id="q"><rect width="100" height="100"/></clipPath>
+</defs>
+<g clip-path="url(#q)">
+<rect width="100" height="100" fill="url(#c)"/>
+<circle cx="50" cy="60" r="21" fill="url(#s)"/>
+<path d="M14 66 Q26 50 38 58 Q46 63 54 54 Q66 42 86 66 Z" fill="url(#m)"/>
+<path d="M0 66 Q12.5 60 25 66 T50 66 T75 66 T100 66 V100 H0Z" fill="#fff"/>
+<path d="M0 78 Q12.5 72 25 78 T50 78 T75 78 T100 78 V100 H0Z" fill="#BFE3FB"/>
+<path d="M0 88 Q12.5 83 25 88 T50 88 T75 88 T100 88 V100 H0Z" fill="#fff" opacity=".9"/>
+</g></svg>

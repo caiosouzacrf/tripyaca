@@ -1,7 +1,9 @@
 /* TripYaCa — Caio e Ya na Ilha Grande */
 import { store } from './store.js';
 import { VIAGEM } from './seed.js';
-import { carregarClima, climaCache, emojiClima, descClima } from './clima.js';
+import { carregarClima, climaCache, descClima } from './clima.js';
+import { IC, icClima } from './icons.js';
+import { baixarLembretes } from './lembretes.js';
 
 /* ================================================= utilidades */
 const $ = (s, el = document) => el.querySelector(s);
@@ -11,9 +13,10 @@ const PESSOAS = { caio: 'Caio', yasmin: 'Yasmin' };
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const DOW_LONGO = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const TIPOS = {
-  transporte: { e: '🚐', n: 'Transporte' }, trilha: { e: '🥾', n: 'Trilha' }, passeio: { e: '🏖️', n: 'Passeio' },
-  comida: { e: '🍽️', n: 'Comida' }, camping: { e: '⛺', n: 'Camping' }, outro: { e: '📌', n: 'Outro' }
+  transporte: { n: 'Van/Uber' }, barco: { n: 'Barco' }, trilha: { n: 'Trilha' }, passeio: { n: 'Passeio' },
+  comida: { n: 'Comida' }, camping: { n: 'Camping' }, outro: { n: 'Outro' }
 };
+const icTipo = t => IC[TIPOS[t] ? t : 'outro'];
 const brl = v => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: Number(v) % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
 // "agora" pode ser simulado para testes: ?agora=2026-11-20T09:30
@@ -32,13 +35,7 @@ function dur(ms) {
   return d + (d > 1 ? ' dias' : ' dia') + (hh ? ' e ' + hh + 'h' : '');
 }
 
-const ICON = {
-  home: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.6 2.6a2.2 2.2 0 0 1 2.8 0l7 5.6c.5.4.8 1 .8 1.7v9.4a2.2 2.2 0 0 1-2.2 2.2H5a2.2 2.2 0 0 1-2.2-2.2V9.9c0-.7.3-1.3.8-1.7z"/></svg>',
-  rot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>',
-  ilha: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18c2 0 2-1.4 4.5-1.4S10 18 12 18s2-1.4 4.5-1.4S19 18 21 18"/><path d="M6 14.5c1.8-4 4.4-6 6-6s4.2 2 6 6"/><path d="M12 8.5V4m0 0 3 1.6M12 4 9 5.6"/></svg>',
-  comer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M7 3v8m-3-8v5a3 3 0 0 0 6 0V3M7 11v10M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/></svg>',
-  mais: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>'
-};
+const TABS = [['inicio', 'home', 'Início'], ['roteiro', 'roteiro', 'Roteiro'], ['ilha', 'ilha', 'Ilha 3D'], ['comer', 'comer', 'Comer'], ['mais', 'mais', 'Mais']];
 
 let toastT;
 function toast(msg, ms = 2400) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
@@ -95,9 +92,9 @@ function alertaHtml(sit) {
   const c = sit.proxCrit; if (!c) return '';
   const falta = quando(c.dia, c.hora) - sit.t;
   const nome = c.curto || c.titulo;
-  if (falta < 0) return `<div class="alerta ruim"><span class="e">⏰</span><div><b>${esc(cap(nome))}</b> era às ${esc(c.hora)} — ${dur(-falta)} atrás. Já foi? Marque como feito.</div></div>`;
-  if (falta <= 30 * 60e3) return `<div class="alerta forte"><span class="e">⚠️</span><div>Faltam <b>${dur(falta)}</b> para ${esc(nome)} (${esc(c.hora)})!</div></div>`;
-  if (falta <= 2 * 3600e3) return `<div class="alerta"><span class="e">⏳</span><div>Faltam <b>${dur(falta)}</b> para ${esc(nome)} (${esc(c.hora)}).</div></div>`;
+  if (falta < 0) return `<div class="alerta ruim">${IC.relogio}<div><b>${esc(cap(nome))}</b> era às ${esc(c.hora)} — ${dur(-falta)} atrás. Já foi? Marque como feito.</div></div>`;
+  if (falta <= 30 * 60e3) return `<div class="alerta forte">${IC.alerta}<div>Faltam <b>${dur(falta)}</b> para ${esc(nome)} (${esc(c.hora)})!</div></div>`;
+  if (falta <= 2 * 3600e3) return `<div class="alerta">${IC.relogio}<div>Faltam <b>${dur(falta)}</b> para ${esc(nome)} (${esc(c.hora)}).</div></div>`;
   return '';
 }
 const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
@@ -112,13 +109,12 @@ function render() {
   app.innerHTML = f();
   if (POS[tela]) POS[tela]();
   $('.fab')?.remove();
-  if (tela === 'roteiro') { const b = document.createElement('button'); b.className = 'fab'; b.textContent = '+'; b.onclick = () => editarItem(null); document.body.appendChild(b); }
+  if (tela === 'roteiro') { const b = document.createElement('button'); b.className = 'fab'; b.innerHTML = IC.plus; b.setAttribute('aria-label', 'Novo item'); b.onclick = () => editarItem(null); document.body.appendChild(b); }
 }
 function renderTabbar() {
   const pend = store.lista('pend').filter(p => !p.ok).length;
   const fase = situacao().fase;
-  const tabs = [['inicio', 'home'], ['roteiro', 'rot'], ['ilha', 'ilha'], ['comer', 'comer'], ['mais', 'mais']];
-  $('#tabbar').innerHTML = tabs.map(([t, ic]) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}" aria-label="${t}">${ICON[ic]}${t === 'mais' && pend && fase === 'antes' ? `<span>${pend}</span>` : ''}</button>`).join('');
+  $('#tabbar').innerHTML = TABS.map(([t, ic, nome]) => `<button data-tab="${t}" class="${S.tab === t ? 'on' : ''}" aria-label="${nome}">${IC[ic]}<em>${nome}</em>${t === 'mais' && pend && fase === 'antes' ? `<span>${pend}</span>` : ''}</button>`).join('');
 }
 $('#tabbar').addEventListener('click', e => {
   const b = e.target.closest('[data-tab]'); if (!b) return;
@@ -155,16 +151,16 @@ TELAS.inicio = () => {
     const falta = sit.ini - sit.t;
     const dias = Math.ceil((quando(VIAGEM.inicio, '00:00') - quando(new Date(sit.t.getTime() - 3 * 3600e3).toISOString().slice(0, 10), '00:00')) / 86400e3);
     big = dias >= 1
-      ? `<div class="n">${dias}</div><div class="l">${dias === 1 ? 'dia' : 'dias'} para a Ilha 🏝️</div>`
-      : `<div class="n">${dur(falta).replace(/(\d+)h(\d*)/, (m, a, b) => a + '<small>h' + b + '</small>')}</div><div class="l">para a Ilha 🏝️ · ${esc(roteiro()[0]?.curto || 'saída')} às ${esc(roteiro()[0]?.hora || '')}</div>`;
+      ? `<div class="n">${dias}</div><div class="l">${dias === 1 ? 'dia' : 'dias'} para a Ilha Grande</div>`
+      : `<div class="n">${dur(falta).replace(/(\d+)h(\d*)/, (m, a, b) => a + '<small>h' + b + '</small>')}</div><div class="l">para a Ilha · ${esc(roteiro()[0]?.curto || 'saída')} às ${esc(roteiro()[0]?.hora || '')}</div>`;
   } else if (sit.fase === 'durante') {
     const alvo = sit.prox;
     if (alvo) {
       const f = quando(alvo.dia, alvo.hora) - sit.t;
       big = `<div class="n">${fmtBig(f)}</div><div class="l">para ${esc(alvo.curto || alvo.titulo)}</div>`;
-    } else big = `<div class="n">🌙</div><div class="l">Fim da programação de hoje</div>`;
+    } else big = `<div class="n" style="font-size:44px;letter-spacing:-.03em">Boa noite</div><div class="l">Fim da programação de hoje</div>`;
   } else {
-    big = `<div class="n">4</div><div class="l">dias inesquecíveis na Ilha Grande 💛</div>`;
+    big = `<div class="n">4</div><div class="l">dias inesquecíveis na Ilha Grande</div>`;
   }
   const cl = climaCache();
   const diaRef = VIAGEM.dias.includes(hojeISO()) ? hojeISO() : VIAGEM.dias[0];
@@ -172,14 +168,14 @@ TELAS.inicio = () => {
   const mare = cl?.mare?.filter(m => m.t > sit.t.getTime()).find(m => m.tipo === 'alta');
   const hoje = roteiro(hojeISO()); const feitosHoje = hoje.filter(i => i.feito).length;
   const tile3 = sit.fase === 'antes'
-    ? `<div class="tile" data-act="sub" data-sub="pend"><small>Pendências</small><b>${pOk}/${pend.length}</b><em>resolvidas</em></div>`
-    : `<div class="tile" data-act="tab" data-tab="roteiro"><small>Hoje</small><b>${feitosHoje}/${hoje.length}</b><em>feitos</em></div>`;
+    ? `<div class="tile" data-act="sub" data-sub="pend"><small>Pendências</small><b>${IC.lista}${pOk}/${pend.length}</b><em>resolvidas</em></div>`
+    : `<div class="tile" data-act="tab" data-tab="roteiro"><small>Hoje</small><b>${IC.check}${feitosHoje}/${hoje.length}</b><em>feitos</em></div>`;
 
   let h = `<div class="hero">${topo()}${diasHtml(sit.fase === 'durante' ? hojeISO() : null, 'dia-rot')}
     <div class="big">${big}</div>
     <div class="tiles">
-      <div class="tile" data-act="sub" data-sub="clima"><small>Clima</small><b>${cd ? emojiClima(cd.code) + ' ' + Math.round(cd.max) + '°' : '—'}</b><em>${cd ? diaInfo(cd.dia).dow + ' ' + diaInfo(cd.dia).n : 'abra com sinal'}</em></div>
-      <div class="tile" data-act="sub" data-sub="clima"><small>Maré alta</small><b>${mare ? horaDe(mare.t) : '—'}</b><em>${mare ? diaCurto(mare.t) : 'estimativa'}</em></div>
+      <div class="tile" data-act="sub" data-sub="clima"><small>Clima</small><b>${cd ? icClima(cd.code) + Math.round(cd.max) + '°' : '—'}</b><em>${cd ? diaInfo(cd.dia).dow + ' ' + diaInfo(cd.dia).n : 'abra com sinal'}</em></div>
+      <div class="tile" data-act="sub" data-sub="clima"><small>Maré alta</small><b>${mare ? IC.onda + horaDe(mare.t) : '—'}</b><em>${mare ? diaCurto(mare.t) : 'estimativa'}</em></div>
       ${tile3}
     </div></div><div class="pad">`;
   h += alertaHtml(sit);
@@ -187,12 +183,12 @@ TELAS.inicio = () => {
   if (sit.fase !== 'depois') {
     h += `<h2>${sit.fase === 'antes' ? 'Primeiros passos' : 'Agora'}</h2>`;
     const lista = sit.fase === 'antes' ? roteiro(VIAGEM.inicio).slice(0, 2) : [sit.atual, sit.prox].filter(Boolean);
-    if (!lista.length) h += `<div class="card vazio">Nada programado agora. Aproveitem! 🌊</div>`;
+    if (!lista.length) h += `<div class="card vazio">Nada programado agora. Aproveitem.</div>`;
     lista.forEach((i, n) => {
       const q = quando(i.dia, i.hora), f = q - sit.t;
       const rotulo = sit.fase === 'antes' ? (n ? 'Depois' : 'Primeiro') : (i === sit.atual ? 'Agora' : 'Próximo');
-      h += `<div class="card agora" data-act="item" data-id="${i.id}"><div class="ic" style="${i.critico ? 'background:var(--sand)' : ''}">${TIPOS[i.tipo]?.e || '📌'}</div>
-        <div class="tx"><small>${rotulo}${i.critico ? ' · importante' : ''}</small><b>${esc(i.titulo)}</b><span class="small muted">${f > 0 ? 'em ' + dur(f) : 'começou há ' + dur(-f)}</span></div>
+      h += `<div class="card agora" data-act="item" data-id="${i.id}"><div class="ico ${i.critico ? 'crit' : ''}">${icTipo(i.tipo)}</div>
+        <div class="tx"><small>${rotulo}${i.critico ? ' · Importante' : ''}</small><b>${esc(i.titulo)}</b><span class="small muted">${f > 0 ? 'em ' + dur(f) : 'começou há ' + dur(-f)}</span></div>
         <div class="hr">${esc(i.hora)}</div></div>`;
     });
     // próximos do dia
@@ -202,14 +198,15 @@ TELAS.inicio = () => {
       h += resto.map(i => itemHtml(i, { mini: true })).join('');
     }
   } else {
-    h += `<div class="card" style="text-align:center"><div style="font-size:42px">🏝️💛</div><p class="txt">Que viagem! Bora relembrar?</p><button class="btn azul" data-act="retro">Ver a retrospectiva</button></div>`;
+    h += `<div class="card" style="text-align:center"><p class="txt" style="margin:6px 0 4px">Que viagem! Bora relembrar?</p><button class="btn azul" data-act="retro">Ver a retrospectiva</button></div>`;
   }
   if (sit.fase === 'antes') {
     const abertas = pend.filter(p => !p.ok).slice(0, 4);
     h += `<h2>Pendências <button class="mais" data-act="sub" data-sub="pend">todas</button></h2><div class="card">
       <div class="small muted">${pOk} de ${pend.length} resolvidas</div><div class="barra"><i style="width:${pend.length ? pOk / pend.length * 100 : 0}%"></i></div>
-      ${abertas.map(p => `<div class="linha-v" data-act="pend-ok" data-id="${p.id}"><span>${esc(p.texto)}</span><span class="check"></span></div>`).join('') || '<div class="small muted">Tudo pronto! ✨</div>'}</div>`;
+      ${abertas.map(p => `<div class="linha-v" data-act="pend-ok" data-id="${p.id}"><span>${esc(p.texto)}</span><span class="check"></span></div>`).join('') || '<div class="small muted">Tudo pronto.</div>'}</div>`;
   }
+  if (sit.fase === 'antes' && !store.cfg.lembretes) h += `<div class="alerta azul" style="margin-top:22px">${IC.sino}<div><b>Lembretes no iPhone</b><br>Adicione os horários importantes ao Calendário — o iPhone avisa 1h e 15 min antes, mesmo sem sinal.<button class="btn azul" data-act="lembretes" style="margin-top:10px">${IC.calendario}Adicionar lembretes</button></div></div>`;
   h += climaResumoHtml();
   h += '</div>';
   return h;
@@ -226,7 +223,7 @@ const horaDe = t => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', m
 const diaCurto = t => { const iso = new Date(t - 3 * 3600e3).toISOString().slice(0, 10); const i = diaInfo(iso); return i.dow + ' ' + i.n; };
 function climaResumoHtml() {
   const cl = climaCache(); if (!cl?.dias?.length) return '';
-  return `<h2>Clima na Ilha <button class="mais" data-act="sub" data-sub="clima">detalhes</button></h2><div class="clima">${cl.dias.map(d => `<div class="${d.dia === hojeISO() ? 'on' : ''}"><small>${diaInfo(d.dia).dow} ${diaInfo(d.dia).n}</small><div class="e">${emojiClima(d.code)}</div><b>${Math.round(d.max)}°</b><small>${d.chuva ?? 0}% chuva</small></div>`).join('')}</div>`;
+  return `<h2>Clima na Ilha <button class="mais" data-act="sub" data-sub="clima">detalhes</button></h2><div class="clima">${cl.dias.map(d => `<div class="${d.dia === hojeISO() ? 'on' : ''}"><small>${diaInfo(d.dia).dow} ${diaInfo(d.dia).n}</small><div class="e">${icClima(d.code)}</div><b>${Math.round(d.max)}°</b><small>${d.chuva ?? 0}% chuva</small></div>`).join('')}</div>`;
 }
 
 /* ---------- Roteiro */
@@ -235,24 +232,24 @@ function itemHtml(i, o = {}) {
   const ehAgora = sit && sit.atual && sit.atual.id === i.id;
   const lugar = i.lugar && LUGARES[i.lugar];
   return `<div class="item ${i.feito ? 'feito' : ''} ${i.critico ? 'critico' : ''} ${ehAgora ? 'agora-on' : ''}" data-id="${i.id}">
-    ${o.mini ? '' : `<button class="check ${i.feito ? 'on' : ''}" data-act="feito" data-id="${i.id}" aria-label="Feito">${i.feito ? '✓' : ''}</button>`}
-    <div class="hora">${esc(i.hora)}<small>${tp.e}</small></div>
+    ${o.mini ? '' : `<button class="check ${i.feito ? 'on' : ''}" data-act="feito" data-id="${i.id}" aria-label="Feito">${i.feito ? IC.check : ''}</button>`}
+    <div class="hora">${esc(i.hora)}${icTipo(i.tipo)}</div>
     <div class="corpo" data-act="item" data-id="${i.id}"><b>${esc(i.titulo)}</b>${i.nota ? `<p>${esc(i.nota)}</p>` : ''}
-      ${o.mini ? '' : `<div class="tags">${i.critico ? '<span class="tag crit">⏰ importante</span>' : ''}${i.feito && i.feitoPor ? `<span class="tag ok">✓ ${esc(PESSOAS[i.feitoPor] || '')}</span>` : ''}${lugar ? `<a class="tag maps" href="${mapsUrl(lugar.lat, lugar.lon)}" target="_blank" rel="noopener">📍 Maps</a>` : ''}</div>`}</div>
-    ${o.mini ? '' : '<div class="alca" data-drag="1" aria-label="Arrastar">⋮⋮</div>'}</div>`;
+      ${o.mini ? '' : `<div class="tags">${i.critico ? `<span class="tag crit">${IC.relogio}Importante</span>` : ''}${i.feito && i.feitoPor ? `<span class="tag ok">${IC.check}${esc(PESSOAS[i.feitoPor] || '')}</span>` : ''}${lugar ? `<a class="tag maps" href="${mapsUrl(lugar.lat, lugar.lon)}" target="_blank" rel="noopener">${IC.pin}Maps</a>` : ''}</div>`}</div>
+    ${o.mini ? '' : `<div class="alca" data-drag="1" aria-label="Arrastar">${IC.alca}</div>`}</div>`;
 }
 TELAS.roteiro = () => {
   const sit = situacao();
   const itens = roteiro(S.dia);
   const di = diaInfo(S.dia);
   let h = `<div class="hero curto">${topo('Roteiro')}${diasHtml(S.dia)}</div><div class="pad">`;
-  h += `<h2 style="margin-top:14px">${cap(di.longo)}, ${di.n} de novembro <span class="muted small" style="font-weight:500">· ${itens.filter(i => i.feito).length}/${itens.length} feitos</span></h2>`;
+  h += `<h2 class="titulo">${cap(di.longo)}, ${di.n} de novembro<span>${itens.filter(i => i.feito).length} de ${itens.length} feitos</span></h2>`;
   h += alertaHtml(sit);
-  h += `<div class="dica-arraste">Segure ⋮⋮ e arraste para trocar horários · solte num dia lá em cima para mudar de dia</div>`;
+  h += `<div class="dica-arraste">${IC.alca}Arraste para trocar horários · solte num dia acima para mudar de dia</div>`;
   h += `<div class="lista" id="lista">`;
   let marcou = false;
   for (const i of itens) {
-    if (!marcou && S.dia === hojeISO() && quando(i.dia, i.hora) > sit.t) { h += `<div class="linha-agora">AGORA ${horaDe(sit.t.getTime())}</div>`; marcou = true; }
+    if (!marcou && S.dia === hojeISO() && quando(i.dia, i.hora) > sit.t) { h += `<div class="linha-agora">AGORA · ${horaDe(sit.t.getTime())}</div>`; marcou = true; }
     h += itemHtml(i, { sit });
   }
   if (!itens.length) h += `<div class="card vazio">Nenhum item neste dia.<br>Toque no + para adicionar.</div>`;
@@ -315,12 +312,12 @@ function editarItem(id) {
   const i = id ? store.get('roteiro', id) : { dia: S.dia, hora: proxHora(), titulo: '', tipo: 'outro', critico: false, nota: '', curto: '', lugar: '' };
   if (!i) return;
   const lugares = Object.values(LUGARES).sort((a, b) => a.nome.localeCompare(b.nome));
-  abrirSheet(`<h3>${id ? 'Editar' : 'Novo item'}<button class="x" data-act="fechar">✕</button></h3>
+  abrirSheet(`<h3>${id ? 'Editar' : 'Novo item'}<button class="x" data-act="fechar" aria-label="Fechar">${IC.x}</button></h3>
     <label class="campo"><span>O que vão fazer</span><input class="inp" id="f-tit" value="${esc(i.titulo)}" placeholder="Ex.: Barca para Mangaratiba"></label>
     <label class="campo"><span>Dia</span><div class="chips" id="f-dia">${VIAGEM.dias.map(d => `<button class="chip ${d === i.dia ? 'on' : ''}" data-v="${d}">${diaInfo(d).dow} ${diaInfo(d).n}</button>`).join('')}</div></label>
     <label class="campo"><span>Horário</span><input class="inp" type="time" id="f-hora" value="${esc(i.hora)}"></label>
-    <label class="campo"><span>Tipo</span><div class="chips" id="f-tipo">${Object.entries(TIPOS).map(([k, t]) => `<button class="chip ${k === i.tipo ? 'on' : ''}" data-v="${k}">${t.e} ${t.n}</button>`).join('')}</div></label>
-    <div class="sw ${i.critico ? 'on' : ''}" id="f-crit"><div><b style="font-size:15px">Importante ⏰</b><div class="small muted">Contagem regressiva e aviso de atraso (barca, van, Uber…)</div></div><i></i></div>
+    <label class="campo"><span>Tipo</span><div class="chips" id="f-tipo">${Object.entries(TIPOS).map(([k, t]) => `<button class="chip ${k === i.tipo ? 'on' : ''}" data-v="${k}">${IC[k]}${t.n}</button>`).join('')}</div></label>
+    <div class="sw ${i.critico ? 'on' : ''}" id="f-crit"><div><b>Importante</b><div class="small muted">Contagem regressiva e aviso de atraso (barca, van, Uber…)</div></div><i></i></div>
     <label class="campo" id="f-curto-w" style="${i.critico ? '' : 'display:none'}"><span>Nome curto na contagem ("Faltam 20 min para …")</span><input class="inp" id="f-curto" value="${esc(i.curto)}" placeholder="a barca"></label>
     <label class="campo"><span>Lugar (botão do Maps)</span><select class="inp" id="f-lugar"><option value="">—</option>${lugares.map(l => `<option value="${l.id}" ${l.id === i.lugar ? 'selected' : ''}>${esc(l.nome)}</option>`).join('')}</select></label>
     <label class="campo"><span>Observação</span><textarea class="inp" id="f-nota" placeholder="Opcional">${esc(i.nota)}</textarea></label>
@@ -344,8 +341,8 @@ function lerForm() {
 }
 
 /* ---------- Ilha 3D */
-TELAS.ilha = () => `<div class="hero curto">${topo('Ilha Grande 3D')}<div class="sub" style="margin-top:8px">Gire com um dedo · zoom com dois · toque nos pontos</div></div>
-  <div class="ilha-wrap" id="ilha"><div class="ilha-load" id="ilha-load">Montando a Ilha… 🏝️</div></div>
+TELAS.ilha = () => `<div class="hero curto">${topo('Ilha Grande 3D')}<div class="sub">Gire com um dedo · zoom com dois · toque nos nomes</div></div>
+  <div class="ilha-wrap" id="ilha"><div class="ilha-load" id="ilha-load">Montando a Ilha…</div></div>
   <div class="trilhas-chips" id="trilhas-chips"></div><div class="pad" id="ilha-info"></div>`;
 POS.ilha = async () => {
   try {
@@ -353,43 +350,43 @@ POS.ilha = async () => {
     if (S.tab !== 'ilha') return;
     await m.montarIlha($('#ilha'), { abrirLugar, abrirTrilha, chips: $('#trilhas-chips') });
     $('#ilha-load')?.remove();
-  } catch (e) { console.error(e); const l = $('#ilha-load'); if (l) l.textContent = 'Não consegui montar o 3D neste celular 😕'; }
+  } catch (e) { console.error(e); const l = $('#ilha-load'); if (l) l.textContent = 'Não consegui montar o 3D neste celular.'; }
 };
 async function abrirLugar(id) {
   const L = (await dados('lugares'))?.lugares.find(x => x.id === id); if (!L) return;
   const fatos = [L.alt ? ['Altitude', L.alt + ' m'] : null, L.tipoNome ? ['Tipo', L.tipoNome] : null, L.dist ? ['Do Abraão', L.dist] : null].filter(Boolean);
-  abrirSheet(`<h3>${esc(L.nome)}<button class="x" data-act="fechar">✕</button></h3>
+  abrirSheet(`<h3>${esc(L.nome)}<button class="x" data-act="fechar" aria-label="Fechar">${IC.x}</button></h3>
     ${L.foto ? `<img class="lugar-foto" src="${esc(L.foto)}" alt="${esc(L.nome)}" loading="lazy"><div class="credito">${esc(L.credito || '')}</div>` : ''}
     ${fatos.length ? `<div class="fatos">${fatos.map(([k, v]) => `<div><small>${k}</small><b>${esc(v)}</b></div>`).join('')}</div>` : ''}
-    <div class="card txt">${(L.curiosidades || []).map(c => `<p style="margin:0 0 10px">${esc(c)}</p>`).join('')}</div>
-    ${L.noRoteiro ? `<div class="alerta" style="margin-top:0"><span class="e">🗓️</span><div>Está no roteiro: <b>${esc(L.noRoteiro)}</b></div></div>` : ''}
-    <a class="btn azul" href="${mapsUrl(L.lat, L.lon)}" target="_blank" rel="noopener">📍 Abrir no Maps</a>`);
+    <div class="card txt">${(L.curiosidades || []).map(c => `<p>${esc(c)}</p>`).join('')}</div>
+    ${L.noRoteiro ? `<div class="alerta azul" style="margin-top:0">${IC.roteiro}<div>No roteiro: <b>${esc(L.noRoteiro)}</b></div></div>` : ''}
+    <a class="btn azul" href="${mapsUrl(L.lat, L.lon)}" target="_blank" rel="noopener">${IC.pin}Abrir no Maps</a>`);
 }
 async function abrirTrilha(t) {
-  abrirSheet(`<h3>${esc(t.nome)}<button class="x" data-act="fechar">✕</button></h3>
+  abrirSheet(`<h3>${esc(t.nome)}<button class="x" data-act="fechar" aria-label="Fechar">${IC.x}</button></h3>
     ${t.foto ? `<img class="lugar-foto" src="${esc(t.foto)}" alt="" loading="lazy"><div class="credito">${esc(t.credito || '')}</div>` : ''}
     <div class="fatos"><div><small>Distância</small><b>${esc(t.km || '—')}</b></div><div><small>Tempo</small><b>${esc(t.tempo || '—')}</b></div><div><small>Nível</small><b>${esc(t.dif || '—')}</b></div></div>
-    ${t.codigo ? `<div class="small muted" style="margin:0 4px 10px">Código oficial do parque (INEA): <b>${esc(t.codigo)}</b></div>` : ''}
-    <div class="card txt">${(t.curiosidades || []).map(c => `<p style="margin:0 0 10px">${esc(c)}</p>`).join('')}</div>
-    ${t.noRoteiro ? `<div class="alerta" style="margin-top:0"><span class="e">🗓️</span><div>Vocês fazem: <b>${esc(t.noRoteiro)}</b></div></div>` : ''}
-    ${t.maps ? `<a class="btn azul" href="${t.maps}" target="_blank" rel="noopener">📍 Abrir início da trilha no Maps</a>` : ''}`);
+    ${t.codigo ? `<div class="small muted" style="margin:0 4px 12px">Código oficial do Parque (INEA): <b style="color:var(--ink)">${esc(t.codigo)}</b></div>` : ''}
+    <div class="card txt">${(t.curiosidades || []).map(c => `<p>${esc(c)}</p>`).join('')}</div>
+    ${t.noRoteiro ? `<div class="alerta azul" style="margin-top:0">${IC.roteiro}<div>Vocês fazem: <b>${esc(t.noRoteiro)}</b></div></div>` : ''}
+    ${t.maps ? `<a class="btn azul" href="${t.maps}" target="_blank" rel="noopener">${IC.pin}Início da trilha no Maps</a>` : ''}`);
 }
 
 /* ---------- Restaurantes */
-TELAS.comer = () => `<div class="hero curto">${topo('Onde comer')}<div class="sub" style="margin-top:8px">Pesquisado em guias e avaliações · as notas são de referência</div></div><div class="pad" id="comer"><div class="vazio">Carregando…</div></div>`;
+TELAS.comer = () => `<div class="hero curto">${topo('Onde comer')}<div class="sub">Pesquisado em guias e avaliações recentes</div></div><div class="pad" id="comer"><div class="vazio">Carregando…</div></div>`;
 POS.comer = async () => {
   const d = await dados('restaurantes'); const el = $('#comer'); if (!el) return;
   if (!d) { el.innerHTML = '<div class="vazio">Não consegui carregar os restaurantes.</div>'; return; }
   const lista = d.restaurantes.filter(r => S.comer === 'todos' || r.periodo === S.comer || r.periodo === 'ambos')
     .filter(r => !S.comerFiltro || (S.comerFiltro === 'conta' ? r.preco === '$' : S.comerFiltro === 'rec' ? r.recomendo : r.local?.toLowerCase().includes(S.comerFiltro)))
     .sort((a, b) => (b.recomendo ? 1 : 0) - (a.recomendo ? 1 : 0));
-  el.innerHTML = `<div class="seg" style="margin-top:14px">${[['dia', '☀️ De dia'], ['noite', '🌙 À noite'], ['todos', 'Todos']].map(([k, n]) => `<button class="${S.comer === k ? 'on' : ''}" data-act="comer" data-v="${k}">${n}</button>`).join('')}</div>
-    <div class="chips" style="margin-bottom:14px">${[['', 'Tudo'], ['rec', '⭐ Recomendo'], ['conta', '💸 Mais em conta'], ['abra', 'No Abraão'], ['praia', 'Nas praias']].map(([k, n]) => `<button class="chip ${S.comerFiltro === k ? 'on' : ''}" data-act="comer-f" data-v="${k}">${n}</button>`).join('')}</div>
-    ${d.intro ? `<div class="alerta" style="margin-top:0"><span class="e">💡</span><div class="small">${esc(d.intro)}</div></div>` : ''}
+  el.innerHTML = `<div class="seg" style="margin-top:14px">${[['dia', 'De dia'], ['noite', 'À noite'], ['todos', 'Todos']].map(([k, n]) => `<button class="${S.comer === k ? 'on' : ''}" data-act="comer" data-v="${k}">${n}</button>`).join('')}</div>
+    <div class="chips" style="margin-bottom:14px">${[['', 'Tudo'], ['rec', 'Recomendados'], ['conta', 'Mais em conta'], ['abra', 'No Abraão'], ['praia', 'Nas praias']].map(([k, n]) => `<button class="chip ${S.comerFiltro === k ? 'on' : ''}" data-act="comer-f" data-v="${k}">${n}</button>`).join('')}</div>
+    ${d.intro ? `<div class="alerta azul" style="margin-top:0">${IC.carteira}<div class="small">${esc(d.intro)}</div></div>` : ''}
     ${lista.map(r => `<div class="card rest"><div class="top"><div><b>${esc(r.nome)}</b><div class="small muted">${esc(r.tipo)} · ${esc(r.local)}</div></div><span class="preco">${esc(r.preco)}</span></div>
-      <p>${esc(r.destaque)}</p>${r.dica ? `<p class="small muted">💡 ${esc(r.dica)}</p>` : ''}
-      <div class="meta">${r.recomendo ? '<span class="selo">⭐ Recomendo</span>' : ''}${r.nota_referencia ? `<span class="tag">${esc(r.nota_referencia)}</span>` : ''}<span class="tag maps">${r.periodo === 'ambos' ? 'dia e noite' : r.periodo === 'dia' ? 'de dia' : 'à noite'}</span></div>
-      <a class="btn sec" style="margin-top:12px" href="${r.lat ? mapsUrl(r.lat, r.lon) : mapsBusca(r.nome + ' Ilha Grande ' + (r.local || ''))}" target="_blank" rel="noopener">📍 Ver no Google Maps (nota atual)</a></div>`).join('') || '<div class="vazio">Nada com esse filtro.</div>'}
+      <p>${esc(r.destaque)}</p>${r.dica ? `<div class="dica">${IC.estrela}<span>${esc(r.dica)}</span></div>` : ''}
+      <div class="meta">${r.recomendo ? `<span class="selo">${IC.estrela}Recomendo</span>` : ''}${r.nota_referencia ? `<span class="tag">${esc(r.nota_referencia)}</span>` : ''}<span class="tag maps">${r.periodo === 'ambos' ? 'dia e noite' : r.periodo === 'dia' ? 'de dia' : 'à noite'}</span></div>
+      <a class="btn sec" style="margin-top:12px" href="${r.lat ? mapsUrl(r.lat, r.lon) : mapsBusca(r.nome + ' Ilha Grande ' + (r.local || ''))}" target="_blank" rel="noopener">${IC.pin}Ver no Google Maps</a></div>`).join('') || '<div class="vazio">Nada com esse filtro.</div>'}
     ${d.fontes ? `<div class="small muted" style="margin:10px 4px 0">Fontes: ${d.fontes.map(f => esc(f)).join(' · ')}</div>` : ''}`;
 };
 
@@ -397,18 +394,19 @@ POS.comer = async () => {
 TELAS.mais = () => {
   const pend = store.lista('pend'); const ck = store.lista('check');
   const it = [
-    ['check', '🎒', 'Checklist', `${ck.filter(c => c.ok).length}/${ck.length} na mala`],
-    ['pend', '✅', 'Pendências', `${pend.filter(p => !p.ok).length} em aberto`],
-    ['grana', '💸', 'Dinheiro', 'estimativa e gastos'],
-    ['infos', '🆘', 'Infos úteis', 'camping, barcas, emergência'],
-    ['clima', '🌤️', 'Clima e maré', 'previsão dos 4 dias'],
-    ['diario', '📔', 'Diário', 'o melhor de cada dia'],
-    ['retro', '🎞️', 'Retrospectiva', 'a viagem em stories'],
-    ['ajustes', '⚙️', 'Ajustes', 'sincronização e perfil']
+    ['check', 'mochila', 'mint', 'Checklist', `${ck.filter(c => c.ok).length} de ${ck.length} na mala`],
+    ['pend', 'lista', 'sand', 'Pendências', `${pend.filter(p => !p.ok).length} em aberto`],
+    ['grana', 'carteira', 'mint', 'Dinheiro', 'estimativa e gastos'],
+    ['infos', 'boia', 'warn', 'Infos úteis', 'barcas, camping, emergência'],
+    ['clima', 'clima', '', 'Clima e maré', 'previsão dos 4 dias'],
+    ['lembretes', 'sino', 'sand', 'Lembretes', 'avisos no Calendário'],
+    ['diario', 'diario', 'ink', 'Diário', 'o melhor de cada dia'],
+    ['retro', 'stories', '', 'Retrospectiva', 'a viagem em stories'],
+    ['ajustes', 'ajustes', 'ink', 'Ajustes', 'sincronização e perfil']
   ];
-  return `<div class="hero curto">${topo('Mais')}</div><div class="pad"><div class="menu" style="margin-top:12px">${it.map(([k, e, n, d]) => `<button data-act="${k === 'retro' ? 'retro' : 'sub'}" data-sub="${k}"><span class="e">${e}</span><div><b>${n}</b><small>${d}</small></div></button>`).join('')}</div></div>`;
+  return `<div class="hero curto">${topo('Mais')}</div><div class="pad"><div class="menu">${it.map(([k, ic, cor, n, d]) => `<button data-act="${k === 'retro' ? 'retro' : k === 'lembretes' ? 'lembretes' : 'sub'}" data-sub="${k}"><span class="ico ${cor}">${IC[ic]}</span><div><b>${n}</b><small>${d}</small></div></button>`).join('')}</div></div>`;
 };
-const voltar = t => `<div class="topo"><button class="sync" data-act="voltar">‹ Voltar</button><span id="syncb">${syncBadge()}</span></div><h1>${t}</h1>`;
+const voltar = t => `<div class="topo"><button class="sync" data-act="voltar">${IC.voltar}Voltar</button><span id="syncb">${syncBadge()}</span></div><h1>${t}</h1>`;
 
 /* ---------- Checklist */
 TELAS.check = () => {
@@ -417,14 +415,14 @@ TELAS.check = () => {
   const ok = lista.filter(c => c.ok).length;
   const grupos = [...new Set(lista.map(c => c.grupo))];
   const cont = d => { const l = todos.filter(c => c.dono === d); return `${l.filter(c => c.ok).length}/${l.length}`; };
-  let h = `<div class="hero curto">${voltar('Checklist 🎒')}</div><div class="pad">
+  let h = `<div class="hero curto">${voltar('Checklist')}</div><div class="pad">
     <div class="seg" style="margin-top:12px">${[['comum', 'Comum'], ['caio', 'Caio'], ['yasmin', 'Yasmin']].map(([k, n]) => `<button class="${dono === k ? 'on' : ''}" data-act="ck-dono" data-v="${k}">${n} <small class="muted">${cont(k)}</small></button>`).join('')}</div>
     <div class="card"><div class="small muted">${ok} de ${lista.length} na mala</div><div class="barra"><i style="width:${lista.length ? ok / lista.length * 100 : 0}%"></i></div></div>`;
   for (const g of grupos) {
-    h += `<div class="grupo">${esc(g)}</div>`;
-    h += lista.filter(c => c.grupo === g).sort((a, b) => (a.ok - b.ok) || a.texto.localeCompare(b.texto)).map(c => `<div class="li ${c.ok ? 'ok' : ''}"><button class="check ${c.ok ? 'on' : ''}" data-act="ck" data-id="${c.id}">${c.ok ? '✓' : ''}</button><span class="t" data-act="ck" data-id="${c.id}">${esc(c.texto)}</span><button class="del" data-act="ck-del" data-id="${c.id}">✕</button></div>`).join('');
+    h += `<div class="grupo">${esc(g)}</div><div class="lista-card">`;
+    h += lista.filter(c => c.grupo === g).sort((a, b) => (a.ok - b.ok) || a.texto.localeCompare(b.texto)).map(c => `<div class="li ${c.ok ? 'ok' : ''}"><button class="check ${c.ok ? 'on' : ''}" data-act="ck" data-id="${c.id}">${c.ok ? IC.check : ''}</button><span class="t" data-act="ck" data-id="${c.id}">${esc(c.texto)}</span><button class="del" data-act="ck-del" data-id="${c.id}" aria-label="Apagar">${IC.x}</button></div>`).join('') + '</div>';
   }
-  h += `<div class="grupo">Adicionar</div><div class="add"><input class="inp" id="ck-novo" placeholder="Ex.: Pregador de roupa" enterkeyhint="done"><button data-act="ck-add">+</button></div>
+  h += `<div class="grupo">Adicionar</div><div class="add"><input class="inp" id="ck-novo" placeholder="Ex.: Pregador de roupa" enterkeyhint="done"><button data-act="ck-add" aria-label="Adicionar">${IC.plus}</button></div>
     <div class="small muted" style="margin:4px 4px 0">Vai para a lista "${dono === 'comum' ? 'Comum' : PESSOAS[dono]}".</div></div>`;
   return h;
 };
@@ -433,10 +431,10 @@ TELAS.check = () => {
 TELAS.pend = () => {
   const l = store.lista('pend').sort((a, b) => (a.ok - b.ok) || a.id.localeCompare(b.id));
   const ok = l.filter(p => p.ok).length;
-  return `<div class="hero curto">${voltar('Pendências ✅')}</div><div class="pad">
+  return `<div class="hero curto">${voltar('Pendências')}</div><div class="pad">
     <div class="card" style="margin-top:12px"><div class="small muted">${ok} de ${l.length} resolvidas antes de sair</div><div class="barra"><i style="width:${l.length ? ok / l.length * 100 : 0}%"></i></div></div>
-    ${l.map(p => `<div class="li ${p.ok ? 'ok' : ''}"><button class="check ${p.ok ? 'on' : ''}" data-act="pend-ok" data-id="${p.id}">${p.ok ? '✓' : ''}</button><span class="t" data-act="pend-ok" data-id="${p.id}">${esc(p.texto)}${p.ok && p._por ? ` <small class="muted">· ${esc(PESSOAS[p._por] || '')}</small>` : ''}</span><button class="del" data-act="pend-del" data-id="${p.id}">✕</button></div>`).join('')}
-    <div class="add"><input class="inp" id="pend-novo" placeholder="Nova pendência" enterkeyhint="done"><button data-act="pend-add">+</button></div></div>`;
+    <div class="lista-card">${l.map(p => `<div class="li ${p.ok ? 'ok' : ''}"><button class="check ${p.ok ? 'on' : ''}" data-act="pend-ok" data-id="${p.id}">${p.ok ? IC.check : ''}</button><span class="t" data-act="pend-ok" data-id="${p.id}">${esc(p.texto)}${p.ok && p._por ? ` <small class="muted">· ${esc(PESSOAS[p._por] || '')}</small>` : ''}</span><button class="del" data-act="pend-del" data-id="${p.id}" aria-label="Apagar">${IC.x}</button></div>`).join('')}</div>
+    <div class="add"><input class="inp" id="pend-novo" placeholder="Nova pendência" enterkeyhint="done"><button data-act="pend-add" aria-label="Adicionar">${IC.plus}</button></div></div>`;
 };
 
 /* ---------- Dinheiro */
@@ -445,7 +443,7 @@ TELAS.grana = () => {
   const estPessoa = orc.reduce((s, o) => s + Number(o.valor || 0), 0), estCasal = estPessoa * 2;
   const gasto = gastos.reduce((s, g) => s + Number(g.valor || 0), 0);
   const sobra = estCasal - gasto, pct = estCasal ? Math.min(100, gasto / estCasal * 100) : 0;
-  let h = `<div class="hero curto">${voltar('Dinheiro 💸')}</div><div class="pad">
+  let h = `<div class="hero curto">${voltar('Dinheiro')}</div><div class="pad">
     <div class="card grana" style="margin-top:12px"><div class="small muted">Gasto do casal até agora</div><div class="n">${brl(gasto)}</div>
       <div class="barra"><i style="width:${pct}%;${pct > 95 ? 'background:var(--warn)' : ''}"></i></div>
       <div class="small muted">Estimado: <b style="color:var(--ink)">${brl(estCasal)}</b> (${brl(estPessoa)} por pessoa) · ${sobra >= 0 ? `sobram <b style="color:var(--mint)">${brl(sobra)}</b>` : `<b style="color:var(--bad)">${brl(-sobra)} acima</b>`}</div></div>
@@ -458,24 +456,24 @@ TELAS.grana = () => {
     const o = orc.filter(x => x.dia === d), g = gastos.filter(x => x.dia === d);
     const e = o.reduce((s, x) => s + Number(x.valor || 0), 0) * 2, gg = g.reduce((s, x) => s + Number(x.valor || 0), 0);
     h += `<div class="card"><div class="linha-v" style="padding-top:0"><b>${diaInfo(d).dow} ${diaInfo(d).n}</b><span><b>${brl(gg)}</b> <small>de ${brl(e)}</small></span></div>
-      ${o.map(x => `<div class="linha-v" data-act="orc-edit" data-id="${x.id}"><small>Estimado · ${esc(x.desc)}</small><small>${brl(x.valor)} p/ pessoa ✎</small></div>`).join('')}
-      ${g.map(x => `<div class="linha-v"><span>${esc(x.desc)} <small>· ${esc(PESSOAS[x._por] || '')}</small></span><span>${brl(x.valor)} <button class="del" data-act="g-del" data-id="${x.id}" style="color:#C3CCD8">✕</button></span></div>`).join('')}</div>`;
+      ${o.map(x => `<div class="linha-v" data-act="orc-edit" data-id="${x.id}"><small>Estimado · ${esc(x.desc)}</small><small>${brl(x.valor)} por pessoa</small></div>`).join('')}
+      ${g.map(x => `<div class="linha-v"><span>${esc(x.desc)} <small>· ${esc(PESSOAS[x._por] || '')}</small></span><span>${brl(x.valor)} <button class="del" data-act="g-del" data-id="${x.id}" aria-label="Apagar">${IC.x}</button></span></div>`).join('')}</div>`;
   }
-  h += `<div class="small muted" style="margin:4px">💡 Na Ilha, muitos lugares preferem Pix ou dinheiro. Toquem num valor estimado para ajustar.</div></div>`;
+  h += `<div class="small muted" style="margin:6px 4px">Na Ilha, muitos lugares preferem Pix ou dinheiro. Toquem num valor estimado para ajustar.</div></div>`;
   return h;
 };
 
 /* ---------- Infos úteis */
-TELAS.infos = () => `<div class="hero curto">${voltar('Infos úteis 🆘')}</div><div class="pad" id="infos"><div class="vazio">Carregando…</div></div>`;
+TELAS.infos = () => `<div class="hero curto">${voltar('Infos úteis')}</div><div class="pad" id="infos"><div class="vazio">Carregando…</div></div>`;
 POS.infos = async () => {
   const d = await dados('infos'); const el = $('#infos'); if (!el) return;
   const contatos = store.lista('contato');
   let h = '';
   for (const sec of d?.secoes || []) {
     h += `<h2>${esc(sec.titulo)}</h2><div class="card">${sec.itens.map(i => `<div class="linha-v" style="align-items:flex-start;gap:12px"><div style="flex:1"><b style="font-size:15px">${esc(i.nome)}</b>${i.texto ? `<div class="small muted" style="margin-top:3px;line-height:1.45">${esc(i.texto)}</div>` : ''}</div>
-      <div style="display:flex;gap:6px;flex:none">${i.tel ? `<a class="tag" href="tel:${esc(i.tel.replace(/[^\d+]/g, ''))}">📞</a>` : ''}${i.whats ? `<a class="tag ok" href="https://wa.me/${esc(i.whats.replace(/\D/g, ''))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${i.lat ? `<a class="tag maps" href="${mapsUrl(i.lat, i.lon)}" target="_blank" rel="noopener">📍</a>` : ''}${i.link ? `<a class="tag maps" href="${esc(i.link)}" target="_blank" rel="noopener">🔗</a>` : ''}</div></div>`).join('')}</div>`;
+      <div style="display:flex;gap:6px;flex:none">${i.tel ? `<a class="tag" href="tel:${esc(i.tel.replace(/[^\d+]/g, ''))}" aria-label="Ligar">${IC.telefone}${esc(i.tel)}</a>` : ''}${i.whats ? `<a class="tag ok" href="https://wa.me/${esc(i.whats.replace(/\D/g, ''))}" target="_blank" rel="noopener">${IC.conversa}WhatsApp</a>` : ''}${i.lat ? `<a class="tag maps" href="${mapsUrl(i.lat, i.lon)}" target="_blank" rel="noopener">${IC.pin}</a>` : ''}${i.link ? `<a class="tag maps" href="${esc(i.link)}" target="_blank" rel="noopener" aria-label="Abrir">${IC.link}</a>` : ''}</div></div>`).join('')}</div>`;
   }
-  h += `<h2>Nossos contatos</h2><div class="card">${contatos.map(c => `<div class="linha-v"><div><b style="font-size:15px">${esc(c.nome)}</b>${c.obs ? `<div class="small muted">${esc(c.obs)}</div>` : ''}</div><div style="display:flex;gap:6px">${c.tel ? `<a class="tag" href="tel:${esc(c.tel.replace(/[^\d+]/g, ''))}">📞</a><a class="tag ok" href="https://wa.me/55${esc(c.tel.replace(/\D/g, '').replace(/^55/, ''))}" target="_blank" rel="noopener">Whats</a>` : ''}<button class="del" data-act="ct-del" data-id="${c.id}">✕</button></div></div>`).join('') || '<div class="small muted">Barqueiro, guia, motorista… anotem aqui.</div>'}
+  h += `<h2>Nossos contatos</h2><div class="card">${contatos.map(c => `<div class="linha-v"><div><b style="font-size:15px">${esc(c.nome)}</b>${c.obs ? `<div class="small muted">${esc(c.obs)}</div>` : ''}</div><div style="display:flex;gap:6px">${c.tel ? `<a class="tag" href="tel:${esc(c.tel.replace(/[^\d+]/g, ''))}" aria-label="Ligar">${IC.telefone}</a><a class="tag ok" href="https://wa.me/55${esc(c.tel.replace(/\D/g, '').replace(/^55/, ''))}" target="_blank" rel="noopener">Whats</a>` : ''}<button class="del" data-act="ct-del" data-id="${c.id}" aria-label="Apagar">${IC.x}</button></div></div>`).join('') || '<div class="small muted">Barqueiro, guia, motorista… anotem aqui.</div>'}
     <div class="linha2" style="margin-top:12px"><input class="inp" id="ct-nome" placeholder="Nome"><input class="inp" id="ct-tel" inputmode="tel" placeholder="Telefone"></div>
     <input class="inp" id="ct-obs" placeholder="Obs. (ex.: barqueiro de Lopes Mendes)" style="margin-top:10px"><button class="btn" data-act="ct-add" style="margin-top:10px">Salvar contato</button></div>`;
   el.innerHTML = h;
@@ -484,15 +482,15 @@ POS.infos = async () => {
 /* ---------- Clima e maré */
 TELAS.clima = () => {
   const cl = climaCache();
-  let h = `<div class="hero curto">${voltar('Clima e maré 🌤️')}</div><div class="pad">`;
+  let h = `<div class="hero curto">${voltar('Clima e maré')}</div><div class="pad">`;
   if (!cl) return h + `<div class="card vazio" style="margin-top:12px">Abra esta tela com sinal para baixar a previsão. Depois ela fica salva.</div><button class="btn" data-act="clima-atualizar">Baixar previsão</button></div>`;
   h += `<div class="small muted" style="margin:12px 4px">Atualizado ${new Date(cl.t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · Open-Meteo</div>`;
   for (const d of cl.dias) {
     const m = (cl.mare || []).filter(x => new Date(x.t - 3 * 3600e3).toISOString().slice(0, 10) === d.dia);
-    h += `<div class="card"><div class="linha-v" style="padding-top:0"><b>${cap(diaInfo(d.dia).longo)}, ${diaInfo(d.dia).n}</b><span style="font-size:24px">${emojiClima(d.code)}</span></div>
+    h += `<div class="card"><div class="linha-v" style="padding-top:0"><b>${cap(diaInfo(d.dia).longo)}, ${diaInfo(d.dia).n}</b><span style="color:var(--sky1)">${icClima(d.code)}</span></div>
       <div class="small" style="margin:10px 0">${descClima(d.code)} · <b>${Math.round(d.min)}° a ${Math.round(d.max)}°</b> · chuva ${d.chuva ?? 0}% · UV ${d.uv ?? '—'}${d.mar ? ` · água ${Math.round(d.mar)}°` : ''}</div>
-      <div class="small muted">🌅 ${d.nascer ? horaDe(d.nascer) : '—'} · 🌇 ${d.por ? horaDe(d.por) : '—'}${d.onda ? ` · ondas até ${d.onda.toFixed(1)} m` : ''}</div>
-      ${m.length ? `<div class="mare" style="margin-top:10px">${m.map(x => `<div>${x.tipo === 'alta' ? '🌊 Alta' : '🏖️ Baixa'}<b>${horaDe(x.t)}</b></div>`).join('')}</div>` : ''}</div>`;
+      <div class="small muted">Nascer do sol ${d.nascer ? horaDe(d.nascer) : '—'} · pôr do sol ${d.por ? horaDe(d.por) : '—'}${d.onda ? ` · ondas até ${d.onda.toFixed(1)} m` : ''}</div>
+      ${m.length ? `<div class="mare" style="margin-top:10px">${m.map(x => `<div>${x.tipo === 'alta' ? 'Maré alta' : 'Maré baixa'}<b>${horaDe(x.t)}</b></div>`).join('')}</div>` : ''}</div>`;
   }
   h += `<div class="small muted" style="margin:4px 4px 14px">Maré: horários estimados por modelo oceânico (não é a tábua oficial da Marinha — as alturas podem diferir). Para a apneia, confiram a tábua do porto de Angra.</div><button class="btn sec" data-act="clima-atualizar">Atualizar agora</button></div>`;
   return h;
@@ -504,14 +502,14 @@ TELAS.diario = () => {
   const ent = p => store.get('diario', d + '_' + p) || {};
   const card = p => {
     const e = ent(p), meu = p === eu;
-    if (!meu) return `<div class="card"><div class="small muted">${PESSOAS[p]}</div>${e.frase || e.nota ? `<div style="font-size:28px;margin:6px 0">${'⭐'.repeat(e.nota || 0)}</div><p class="txt" style="margin:0">${esc(e.frase || '')}</p>${e.melhor ? `<p class="small muted">✨ Melhor momento: ${esc(e.melhor)}</p>` : ''}` : '<p class="small muted">Ainda não escreveu.</p>'}</div>`;
+    if (!meu) return `<div class="card"><div class="small muted">${PESSOAS[p]}</div>${e.frase || e.nota ? `<div class="estrelas">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= (e.nota || 0) ? 'on' : ''}" tabindex="-1">${IC.estrela}</button>`).join('')}</div><p class="txt" style="margin:0">${esc(e.frase || '')}</p>${e.melhor ? `<p class="small muted">Melhor momento: ${esc(e.melhor)}</p>` : ''}` : '<p class="small muted">Ainda não escreveu.</p>'}</div>`;
     return `<div class="card"><div class="small muted">Você (${PESSOAS[p]})</div>
-      <div class="estrelas" id="di-nota" data-v="${e.nota || 0}">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= (e.nota || 0) ? 'on' : ''}" data-n="${n}">⭐</button>`).join('')}</div>
+      <div class="estrelas" id="di-nota" data-v="${e.nota || 0}">${[1, 2, 3, 4, 5].map(n => `<button class="${n <= (e.nota || 0) ? 'on' : ''}" data-n="${n}" aria-label="${n}">${IC.estrela}</button>`).join('')}</div>
       <label class="campo" style="margin-top:10px"><span>O dia numa frase</span><textarea class="inp" id="di-frase" placeholder="Hoje foi…">${esc(e.frase || '')}</textarea></label>
       <label class="campo"><span>Melhor momento</span><input class="inp" id="di-melhor" value="${esc(e.melhor || '')}" placeholder="Ex.: o pôr do sol em Lopes Mendes"></label>
       <button class="btn" data-act="di-salvar">Salvar</button></div>`;
   };
-  return `<div class="hero curto">${voltar('Diário 📔')}${diasHtml(d, 'dia-diario')}</div><div class="pad" style="margin-top:12px">${card(eu)}${card(eu === 'caio' ? 'yasmin' : 'caio')}</div>`;
+  return `<div class="hero curto">${voltar('Diário')}${diasHtml(d, 'dia-diario')}</div><div class="pad" style="margin-top:12px">${card(eu)}${card(eu === 'caio' ? 'yasmin' : 'caio')}</div>`;
 };
 POS.diario = () => {
   const el = $('#di-nota'); if (!el) return;
@@ -521,10 +519,10 @@ POS.diario = () => {
 /* ---------- Ajustes */
 TELAS.ajustes = () => {
   const st = store.status;
-  return `<div class="hero curto">${voltar('Ajustes ⚙️')}</div><div class="pad">
+  return `<div class="hero curto">${voltar('Ajustes')}</div><div class="pad">
     <h2>Quem está usando este celular</h2><div class="seg">${Object.entries(PESSOAS).map(([k, n]) => `<button class="${store.cfg.eu === k ? 'on' : ''}" data-act="eu" data-v="${k}">${n}</button>`).join('')}</div>
     <h2>Sincronização</h2><div class="card">
-      ${store.temServidor() ? `<div class="linha-v"><span>Status</span><b>${st.sincronizando ? 'Sincronizando…' : !st.online ? 'Offline' : st.erro ? '⚠️ ' + esc(st.erro) : 'Ligada ✓'}</b></div>
+      ${store.temServidor() ? `<div class="linha-v"><span>Status</span><b>${st.sincronizando ? 'Sincronizando…' : !st.online ? 'Offline' : st.erro ? esc(st.erro) : 'Ligada'}</b></div>
       <div class="linha-v"><span>Última sincronização</span><small>${st.ultima ? new Date(st.ultima).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}</small></div>
       <div class="linha-v"><span>Alterações esperando sinal</span><b>${store.pendentes}</b></div>
       <button class="btn" data-act="sync" style="margin-top:12px">Sincronizar agora</button>
@@ -532,19 +530,20 @@ TELAS.ajustes = () => {
       <label class="campo" style="margin-top:14px"><span>Endereço do servidor (termina em /exec)</span><input class="inp" id="cfg-url" value="${esc(store.cfg.url || '')}" placeholder="https://script.google.com/macros/s/…/exec"></label>
       <label class="campo"><span>Código da viagem</span><input class="inp" id="cfg-k" value="${esc(store.cfg.k || '')}" placeholder="código que apareceu no Apps Script"></label>
       <button class="btn sec" data-act="cfg-salvar">Salvar e testar</button></div>
+    <h2>Lembretes</h2><div class="card small" style="line-height:1.55">Os horários importantes (van, lancha, barcos, barca, Uber) e a véspera da viagem viram eventos no Calendário do iPhone, com aviso 1h e 15 min antes — funciona sem sinal.<button class="btn" data-act="lembretes" style="margin-top:12px">${IC.calendario}Adicionar ao Calendário</button><a class="btn sec" href="data/lembretes.ics">Se não abrir, use este arquivo</a></div>
     <h2>Instalar na tela de início</h2><div class="card small" style="line-height:1.55">
       <b>iPhone (Safari):</b> Compartilhar → <b>Adicionar à Tela de Início</b>.<br><b>Android (Chrome):</b> menu ⋮ → <b>Instalar app</b>.<br>
       Depois de aberto uma vez com sinal, o app funciona <b>sem internet</b>.</div>
-    <p class="small muted" style="text-align:center;margin:20px 0">TripYaCa v1.0 · Caio & Ya na Ilha Grande 🏝️</p></div>`;
+    <p class="small muted" style="text-align:center;margin:22px 0">TripYaCa v1.1 · Caio & Ya na Ilha Grande</p></div>`;
 };
 
 /* ---------- Boas-vindas */
 function renderBoasVindas() {
   $('#tabbar').innerHTML = ''; $('.fab')?.remove();
   $('#app').innerHTML = `<div class="boas"><img class="logo" src="icons/icon-512.png" alt=""><h1>TripYaCa</h1>
-    <p>Caio & Ya na Ilha Grande 🏝️<br>19 a 22 de novembro${store.temServidor() ? ' · sincronização ligada ✓' : ''}</p>
-    <div class="small" style="color:var(--ink2);margin:0 4px 10px;font-weight:600">Quem é você?</div>
-    <div class="quem"><button data-act="eu" data-v="caio"><span>🧔🏻‍♂️</span>Caio</button><button data-act="eu" data-v="yasmin"><span>👩🏻</span>Yasmin</button></div></div>`;
+    <p>Caio & Ya na Ilha Grande<br>19 a 22 de novembro${store.temServidor() ? ' · sincronização ligada' : ''}</p>
+    <div class="rot">Quem é você?</div>
+    <div class="quem"><button data-act="eu" data-v="caio"><span>C</span>Caio</button><button data-act="eu" data-v="yasmin"><span>Y</span>Yasmin</button></div></div>`;
 }
 
 /* ---------- Retrospectiva */
@@ -556,15 +555,15 @@ function abrirRetro() {
   const melhorDia = VIAGEM.dias.map(d => ({ d, n: diarios.filter(e => e.d === d && e.nota).reduce((s, e) => s + e.nota, 0) })).sort((a, b) => b.n - a.n)[0];
   const gasto = store.lista('gasto').reduce((s, g) => s + Number(g.valor || 0), 0);
   const slides = [
-    `<div class="k">TripYaCa</div><div class="v">🏝️</div><div class="d">Caio & Ya na Ilha Grande<br>19 a 22 de novembro</div>`,
-    `<div class="k">Vocês fizeram</div><div class="v">${feitos.length}</div><div class="d">coisas do roteiro${trilhas ? `, sendo ${trilhas} de trilha 🥾` : ''}</div>`,
-    ...(notas.length ? [`<div class="k">Nota da viagem</div><div class="v">${media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</div><div class="d">${'⭐'.repeat(Math.round(media))}<br>${melhorDia?.n ? `O melhor dia: ${diaInfo(melhorDia.d).longo}, ${diaInfo(melhorDia.d).n}` : ''}</div>`] : []),
-    ...diarios.filter(e => e.melhor || e.frase).map(e => `<div class="k">${diaInfo(e.d).dow} ${diaInfo(e.d).n} · ${PESSOAS[e.p]}</div>${e.frase ? `<div class="q">“${esc(e.frase)}”</div>` : ''}${e.melhor ? `<div class="d">✨ ${esc(e.melhor)}</div>` : ''}`),
+    `<div class="k">TripYaCa</div><div class="v">4 dias</div><div class="d">Caio & Ya na Ilha Grande<br>19 a 22 de novembro</div>`,
+    `<div class="k">Vocês fizeram</div><div class="v">${feitos.length}</div><div class="d">coisas do roteiro${trilhas ? `, sendo ${trilhas} de trilha` : ''}</div>`,
+    ...(notas.length ? [`<div class="k">Nota da viagem</div><div class="v">${media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</div><div class="d">${melhorDia?.n ? `O melhor dia: ${diaInfo(melhorDia.d).longo}, ${diaInfo(melhorDia.d).n}` : ''}</div>`] : []),
+    ...diarios.filter(e => e.melhor || e.frase).map(e => `<div class="k">${diaInfo(e.d).dow} ${diaInfo(e.d).n} · ${PESSOAS[e.p]}</div>${e.frase ? `<div class="q">“${esc(e.frase)}”</div>` : ''}${e.melhor ? `<div class="d">${esc(e.melhor)}</div>` : ''}`),
     ...(gasto ? [`<div class="k">Investimento em felicidade</div><div class="v" style="font-size:56px">${brl(gasto)}</div><div class="d">gastos anotados pelo casal</div>`] : []),
-    `<div class="k">Até a próxima</div><div class="v">💛</div><div class="d">Para onde vamos agora?</div>`
+    `<div class="k">Até a próxima</div><div class="v" style="font-size:56px">Próximo destino?</div><div class="d">Obrigado pela viagem.</div>`
   ];
   let n = 0; let el = $('#retro'); if (!el) { el = document.createElement('div'); el.id = 'retro'; document.body.appendChild(el); }
-  const mostrar = () => { el.innerHTML = `<div class="bars">${slides.map((_, k) => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</div><button class="fechar" data-x="1">✕</button><div class="slide">${slides[n]}</div>`; };
+  const mostrar = () => { el.innerHTML = `<div class="bars">${slides.map((_, k) => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</div><button class="fechar" data-x="1" aria-label="Fechar">${IC.x}</button><div class="slide">${slides[n]}</div>`; };
   el.onclick = e => { if (e.target.closest('[data-x]')) { el.classList.remove('on'); return; } n = e.clientX < innerWidth / 3 ? Math.max(0, n - 1) : n + 1; if (n >= slides.length) { el.classList.remove('on'); return; } mostrar(); };
   mostrar(); el.classList.add('on');
 }
@@ -580,6 +579,7 @@ document.addEventListener('click', e => {
     case 'sub': if (a.dataset.sub === 'retro') return abrirRetro(); S.sub = a.dataset.sub; if (S.tab !== 'mais' && !['clima', 'pend'].includes(S.sub)) S.tab = 'mais'; scrollTo(0, 0); render(); break;
     case 'voltar': S.sub = null; scrollTo(0, 0); render(); break;
     case 'retro': abrirRetro(); break;
+    case 'lembretes': baixarLembretes(roteiro(), VIAGEM).then(ok => { store.setCfg('lembretes', 1); toast(ok ? 'Toque em "Adicionar Todos" no Calendário' : 'Abra pelo Safari para adicionar'); if (S.tab === 'inicio') render(); }); break;
     case 'ajustes': S.sub = 'ajustes'; scrollTo(0, 0); render(); break;
     case 'sync': store.sincronizar(); toast('Sincronizando…'); break;
     case 'dia': S.dia = a.dataset.dia; S._rolou = false; render(); break;
@@ -628,16 +628,16 @@ document.addEventListener('click', e => {
     case 'clima-atualizar': toast('Buscando previsão…'); carregarClima(true).then(ok => { toast(ok ? 'Previsão atualizada ✓' : 'Sem sinal agora'); render(); }); break;
     case 'di-salvar': {
       const nota = +($('#di-nota').dataset.v || 0);
-      store.salvar('diario', S.diaDiario + '_' + eu, { nota, frase: $('#di-frase').value.trim(), melhor: $('#di-melhor').value.trim() }); toast('Salvo no diário 📔'); render(); break;
+      store.salvar('diario', S.diaDiario + '_' + eu, { nota, frase: $('#di-frase').value.trim(), melhor: $('#di-melhor').value.trim() }); toast('Salvo no diário'); render(); break;
     }
     case 'eu': store.setCfg('eu', a.dataset.v); setDiaPadrao(); render(); break;
     case 'cfg-salvar': {
       store.setCfg('url', $('#cfg-url').value.trim()); store.setCfg('k', $('#cfg-k').value.trim());
-      toast('Testando…'); store.sincronizar().then(() => { toast(store.status.erro ? '⚠️ ' + store.status.erro : 'Sincronização ligada ✓'); render(); }); break;
+      toast('Testando…'); store.sincronizar().then(() => { toast(store.status.erro ? store.status.erro : 'Sincronização ligada ✓'); render(); }); break;
     }
     case 'convite': {
       const link = location.origin + location.pathname + '#v=' + btoa(JSON.stringify({ u: store.cfg.url, k: store.cfg.k }));
-      (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => toast('Link copiado! Mande para o outro celular 💌')).catch(() => prompt('Copie o link:', link)); break;
+      (navigator.clipboard?.writeText(link) || Promise.reject()).then(() => toast('Link copiado — mande para o outro celular')).catch(() => prompt('Copie o link:', link)); break;
     }
   }
 });

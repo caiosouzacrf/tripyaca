@@ -1,31 +1,31 @@
 {
   "secoes": [
-    { "titulo": "🆘 Emergência", "itens": [
+    { "titulo": "Emergência", "itens": [
       { "nome": "SAMU", "texto": "Ambulância", "tel": "192" },
       { "nome": "Bombeiros", "texto": "Há posto dos Bombeiros na Vila do Abraão", "tel": "193" },
       { "nome": "Polícia Militar", "tel": "190" },
       { "nome": "Posto de saúde do Abraão", "texto": "Rua do Comércio, Vila do Abraão (endereço de diretório — confirmar na vila). É o único atendimento médico da ilha.", "link": "https://www.google.com/maps/search/?api=1&query=Posto%20de%20Sa%C3%BAde%20Vila%20do%20Abra%C3%A3o%20Ilha%20Grande" }
     ]},
-    { "titulo": "⛺ Camping", "itens": [
+    { "titulo": "Camping", "itens": [
       { "nome": "Camping Sombra dos Coqueirais", "texto": "Av. Beira Mar, 7 — Vila do Abraão (segundo o Pitchup). Cozinha, banheiros, Wi-Fi, sala de secagem. Check-out até 16h. Não achei telefone público — anotem em \"Nossos contatos\".", "link": "https://www.google.com/maps/search/?api=1&query=Camping%20Sombra%20dos%20Coqueirais%20Ilha%20Grande" }
     ]},
-    { "titulo": "🚤 Ida — quinta, 19", "itens": [
-      { "nome": "Lanchas Conceição de Jacareí → Abraão", "texto": "Embarque na Marina Porto Real (km 455 da BR-101). Saídas de hora em hora das 8h até ~18h (Conceição Translados / Caiçara Tour). ~20 min de travessia, ~R$ 60 só ida ou R$ 100 ida e volta. ⚠️ A última costuma ser às 18h — 18:30 pode ser tarde demais. Reservem!" },
+    { "titulo": "Ida — quinta, 19", "itens": [
+      { "nome": "Lanchas Conceição de Jacareí → Abraão", "texto": "Embarque na Marina Porto Real (km 455 da BR-101). Saídas de hora em hora das 8h até ~18h (Conceição Translados / Caiçara Tour). ~20 min de travessia, ~R$ 60 só ida ou R$ 100 ida e volta. Atenção: a última costuma ser às 18h — 18:30 pode ser tarde demais. Reservem!" },
       { "nome": "Caiçara Tour", "texto": "Lanchas Conceição ↔ Abraão, 8h às 18h", "whats": "+55 21 99949-1317" },
       { "nome": "Travessia Ilha Grande", "texto": "Saídas 09:30, 12:30, 14:00 e 17:00 (site, 2026)", "link": "https://travessiailhagrande.com" }
     ]},
-    { "titulo": "⛴️ Volta — domingo, 22", "itens": [
+    { "titulo": "Volta — domingo, 22", "itens": [
       { "nome": "Barca Abraão → Mangaratiba (Barcas Rio)", "texto": "17h30 todos os dias, inclusive domingo · R$ 20,50 · 80 a 110 min. Domingo à tarde lota: cheguem cedo ao cais. Às vezes há viagem extra se sobrar muita gente." },
       { "nome": "Lanchas Abraão → Conceição de Jacareí", "texto": "De hora em hora até ~17h30 (Travessia IG: 10:00, 13:00, 17:30). Domingo é o dia mais cheio — comprem antes." }
     ]},
-    { "titulo": "🎫 Taxa de turismo (TTS)", "itens": [
+    { "titulo": "Taxa de turismo (TTS)", "itens": [
       { "nome": "Taxa de Turismo Sustentável de Angra", "texto": "Cobrada desde 01/06/2026. Com 2+ noites em hospedagem comprovada: R$ 50 por pessoa (sem comprovante: R$ 100). Paguem antes pelo portal Viva Angra e levem o comprovante do camping. Também há totens no Abraão.", "link": "https://www.google.com/search?q=Viva+Angra+taxa+de+turismo+sustent%C3%A1vel" }
     ]},
-    { "titulo": "🚣 Barquinhos na Ilha", "itens": [
+    { "titulo": "Barcos dentro da Ilha", "itens": [
       { "nome": "Abraão ↔ Pouso (Lopes Mendes)", "texto": "~R$ 30 ida e volta. Comprem a volta junto, guardem o comprovante e perguntem o horário do último barco." },
       { "nome": "Abraão ↔ Praia da Feiticeira", "texto": "~R$ 15 cada trecho, 5 a 20 min." }
     ]},
-    { "titulo": "💡 Dicas da Ilha", "itens": [
+    { "titulo": "Dicas da Ilha", "itens": [
       { "nome": "Dinheiro em espécie", "texto": "Caixa eletrônico na vila é incerto. Barcos, barracas e o flutuante do Pouso podem não aceitar cartão." },
       { "nome": "Mapa offline", "texto": "No Google Maps, baixem a área \"Ilha Grande\" (Perfil → Mapas off-line) antes de sair de casa." },
       { "nome": "Energia e luz", "texto": "Faltas de energia são comuns — lanterna de cabeça e powerbank carregado." },

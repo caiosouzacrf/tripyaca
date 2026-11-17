@@ -17,7 +17,8 @@ if (!st.cfg) st.cfg = {};
 // Itens iniciais: entram com u=1 (mais antigos que qualquer edição) e nunca vão para a fila.
 for (const s of SEED) {
   const k = s.col + ':' + s.id;
-  if (!st.itens[k]) st.itens[k] = { col: s.col, id: s.id, d: s.d, u: 1, del: false, por: '' };
+  // item nunca editado (u=1) recebe a versão mais nova dos dados iniciais
+  if (!st.itens[k] || st.itens[k].u === 1) st.itens[k] = { col: s.col, id: s.id, d: s.d, u: 1, del: false, por: '' };
 }
 
 const ouvintes = new Set();

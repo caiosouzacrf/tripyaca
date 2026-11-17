@@ -15,7 +15,7 @@ const roteiro = [
   R('r1-01', d1, '13:40', 'Estar no ponto da van em Itaguaí', { tipo: 'transporte' }),
   R('r1-02', d1, '14:00', 'Van Itaguaí → Conceição de Jacareí', { tipo: 'transporte', critico: true, curto: 'a van' }),
   R('r1-03', d1, '16:00', 'Chegada em Conceição de Jacareí', { tipo: 'transporte', nota: 'Horário aproximado (depende do trânsito na Rio-Santos).' }),
-  R('r1-04', d1, '18:30', 'FlexBoat Conceição de Jacareí → Abraão', { tipo: 'transporte', critico: true, curto: 'o FlexBoat', nota: 'Embarque na Marina Porto Real (km 455). ⚠️ As lanchas saem de hora em hora só até ~18h — confirmem o horário e reservem.' }),
+  R('r1-04', d1, '18:30', 'FlexBoat Conceição de Jacareí → Abraão', { tipo: 'barco', critico: true, curto: 'o FlexBoat', nota: 'Embarque na Marina Porto Real (km 455). Atenção: as lanchas saem de hora em hora só até ~18h — confirmem o horário e reservem.' }),
   R('r1-05', d1, '19:00', 'Chegada em Abraão', { tipo: 'transporte', lugar: 'abraao' }),
   R('r1-06', d1, '19:15', 'Montar a barraca no camping Sombra dos Coqueirais', { tipo: 'camping', lugar: 'camping' }),
   R('r1-07', d1, '20:30', 'Passear pelo centrinho', { tipo: 'passeio', lugar: 'abraao' }),
@@ -28,7 +28,7 @@ const roteiro = [
   R('r2-05', d2, '11:15', 'Almoço no Bar do Alexandre', { tipo: 'comida' }),
   R('r2-06', d2, '12:00', 'Saída para Lopes Mendes', { tipo: 'trilha', curto: 'partir para Lopes Mendes', lugar: 'lopes' }),
   R('r2-07', d2, '13:30', 'Chegada em Lopes Mendes', { tipo: 'trilha', lugar: 'lopes' }),
-  R('r2-08', d2, '16:00', 'Retorno de barco', { tipo: 'transporte', critico: true, curto: 'o barco de volta', lugar: 'pouso' }),
+  R('r2-08', d2, '16:00', 'Retorno de barco', { tipo: 'barco', critico: true, curto: 'o barco de volta', lugar: 'pouso' }),
   R('r2-09', d2, '16:45', 'Descansar do passeio', { tipo: 'camping' }),
   R('r2-10', d2, '19:00', 'Centrinho', { tipo: 'passeio', lugar: 'abraao' }),
 
@@ -42,9 +42,9 @@ const roteiro = [
   R('r4-03', d4, '10:30', 'Chegada na cachoeira', { tipo: 'trilha', lugar: 'cachoeira' }),
   R('r4-04', d4, '12:00', 'Sair para a Praia da Feiticeira', { tipo: 'trilha', lugar: 'feiticeira' }),
   R('r4-05', d4, '12:20', 'Chegada na Praia da Feiticeira 🍹', { tipo: 'passeio', lugar: 'feiticeira', nota: 'Piña colada!' }),
-  R('r4-06', d4, '15:00', 'Retorno de barco', { tipo: 'transporte', critico: true, curto: 'o barco de volta', lugar: 'feiticeira' }),
+  R('r4-06', d4, '15:00', 'Retorno de barco', { tipo: 'barco', critico: true, curto: 'o barco de volta', lugar: 'feiticeira' }),
   R('r4-07', d4, '15:30', 'Desarmar a barraca', { tipo: 'camping', lugar: 'camping', nota: 'O check-out do camping é até 16h.' }),
-  R('r4-08', d4, '17:30', 'Barca Abraão → Mangaratiba', { tipo: 'transporte', critico: true, curto: 'a barca', lugar: 'abraao', nota: 'Barcas Rio · R$ 20,50 · 80 a 110 min. Domingo lota: cheguem cedo ao cais.' }),
+  R('r4-08', d4, '17:30', 'Barca Abraão → Mangaratiba', { tipo: 'barco', critico: true, curto: 'a barca', lugar: 'abraao', nota: 'Barcas Rio · R$ 20,50 · 80 a 110 min. Domingo lota: cheguem cedo ao cais.' }),
   R('r4-09', d4, '19:00', 'Pegar o Uber agendado', { tipo: 'transporte', critico: true, curto: 'o Uber', nota: 'Confirmar o horário certo do Uber.' })
 ];
 

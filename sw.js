@@ -1,9 +1,10 @@
 /* TripYaCa — funciona sem internet: guarda o app inteiro no celular na primeira visita. */
-const VERSAO = 'tripyaca-v1';
+const VERSAO = 'tripyaca-v2';
 const ARQUIVOS = [
   './',
   "css/app.css",
   "data/infos.json",
+  "data/lembretes.ics",
   "data/lugares.json",
   "data/rede.json",
   "data/relevo.bin",
@@ -33,7 +34,9 @@ const ARQUIVOS = [
   "index.html",
   "js/app.js",
   "js/clima.js",
+  "js/icons.js",
   "js/ilha3d.js",
+  "js/lembretes.js",
   "js/seed.js",
   "js/store.js",
   "manifest.webmanifest",

@@ -3,6 +3,7 @@
  * Trilhas: OpenStreetMap (códigos T1–T16 do Parque Estadual). */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { IC } from './icons.js';
 
 const U = 0.01;      // 1 unidade = 100 m
 const EXAG = 1.7;    // exagero vertical para o relevo "aparecer"
@@ -99,7 +100,7 @@ export async function montarIlha(el, { abrirLugar, abrirTrilha, chips }) {
     return !!(s.nomes || s.semNome || s.bbox);
   };
   const grupoDestaque = new THREE.Group(); scene.add(grupoDestaque);
-  const matDest = new THREE.MeshBasicMaterial({ color: 0xf5c842 });
+  const matDest = new THREE.MeshBasicMaterial({ color: 0xffc83d });
   const matSel = new THREE.MeshBasicMaterial({ color: 0xff7a3d });
   const tubos = {};
   for (const t of trilhas) {
@@ -119,25 +120,25 @@ export async function montarIlha(el, { abrirLugar, abrirTrilha, chips }) {
   const grupoPins = new THREE.Group(); scene.add(grupoPins);
   const sprites = [];
   const texCache = {};
-  function texPin(emoji, nome, destaque) {
-    const k = emoji + nome + destaque; if (texCache[k]) return texCache[k];
+  function texPin(cor, nome, destaque) {
+    const k = cor + nome + destaque; if (texCache[k]) return texCache[k];
     const cv = document.createElement('canvas'); const s = 2; cv.width = 360 * s; cv.height = 120 * s;
     const g = cv.getContext('2d'); g.scale(s, s);
-    g.font = '600 30px -apple-system,Segoe UI,Roboto,sans-serif';
-    const tw = Math.min(250, g.measureText(nome).width);
-    const w = 70 + tw + 18, x0 = (360 - w) / 2;
-    g.fillStyle = destaque ? '#F5C842' : 'rgba(255,255,255,.95)';
+    g.font = '600 25px -apple-system,Segoe UI,Roboto,sans-serif';
+    const tw = Math.min(260, g.measureText(nome).width);
+    const w = 48 + tw + 20, x0 = (360 - w) / 2;
+    g.fillStyle = destaque ? '#0B1726' : 'rgba(255,255,255,.96)';
     g.shadowColor = 'rgba(20,50,90,.25)'; g.shadowBlur = 10; g.shadowOffsetY = 3;
-    g.beginPath(); g.roundRect(x0, 22, w, 60, 30); g.fill(); g.shadowColor = 'transparent';
-    g.beginPath(); g.moveTo(180 - 10, 80); g.lineTo(180, 100); g.lineTo(180 + 10, 80); g.fill();
-    g.font = '32px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; g.textBaseline = 'middle'; g.fillText(emoji, x0 + 16, 53);
-    g.font = '600 26px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillStyle = '#0E1A2B'; g.fillText(nome, x0 + 62, 54, 250);
+    g.beginPath(); g.roundRect(x0, 28, w, 50, 14); g.fill(); g.shadowColor = 'transparent';
+    g.beginPath(); g.moveTo(180 - 8, 77); g.lineTo(180, 92); g.lineTo(180 + 8, 77); g.fill();
+    g.fillStyle = cor; g.beginPath(); g.arc(x0 + 24, 53, 8, 0, Math.PI * 2); g.fill(); g.lineWidth = 3; g.strokeStyle = destaque ? '#0B1726' : '#fff'; g.stroke(); g.textBaseline = 'middle';
+    g.font = '600 25px -apple-system,Segoe UI,Roboto,sans-serif'; g.fillStyle = destaque ? '#fff' : '#0B1726'; g.fillText(nome, x0 + 42, 54, 260);
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; texCache[k] = t; return t;
   }
-  const EMO = { vila: '🏘️', praia: '🏖️', cachoeira: '💦', pico: '⛰️', historia: '🏛️', lagoa: '🐠', gruta: '🕳️', mirante: '👀', camping: '⛺', reserva: '🌿', parque: '🌳' };
+  const COR = { vila: '#1F6FD6', praia: '#E9B949', cachoeira: '#3AA7E0', pico: '#6B7A8F', historia: '#9A6B3F', lagoa: '#2FB38A', gruta: '#5B5FC7', mirante: '#1F6FD6', camping: '#E5793A', reserva: '#2E8B57', parque: '#2E8B57' };
   for (const L of lugares) {
     if (L.lat == null) continue;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texPin(EMO[L.tipo] || '📍', L.curto || L.nome, !!L.noRoteiro), depthTest: false, transparent: true }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texPin(COR[L.tipo] || '#1F6FD6', L.curto || L.nome, !!L.noRoteiro), depthTest: false, transparent: true }));
     const y = yDe(Math.max(2, alt(L.lon, L.lat)));
     sp.position.set(lx(L.lon), y + 6, lz(L.lat)); sp.center.set(0.5, 0.05);
     sp.userData = { id: L.id, base: 1, prio: L.noRoteiro ? 2 : L.prio || 1 };
@@ -177,10 +178,10 @@ export async function montarIlha(el, { abrirLugar, abrirTrilha, chips }) {
 
   /* ---------- botões */
   const ctrl = document.createElement('div'); ctrl.className = 'ilha-ctrl';
-  ctrl.innerHTML = `<button data-b="casa" aria-label="Voltar">⟲</button><button data-b="nomes" class="on" aria-label="Nomes">Aa</button><button data-b="trilhas" class="on" aria-label="Trilhas">🥾</button><button data-b="girar" aria-label="Girar">↻</button>`;
+  ctrl.innerHTML = `<button data-b="casa" aria-label="Centralizar">${IC.centro}</button><button data-b="nomes" class="on" aria-label="Nomes">${IC.texto}</button><button data-b="trilhas" class="on" aria-label="Trilhas">${IC.camadas}</button><button data-b="girar" aria-label="Girar sozinho">${IC.girar}</button>`;
   el.appendChild(ctrl);
   const leg = document.createElement('div'); leg.className = 'ilha-leg';
-  leg.innerHTML = `<div><i style="background:#F5C842"></i>trilhas do roteiro</div><div><i style="background:#fff;outline:1px solid #ccd"></i>outras trilhas</div><div style="opacity:.7">Relevo real · exagero ${EXAG}×</div>`;
+  leg.innerHTML = `<div><i style="background:#FFC83D"></i>Trilhas do roteiro</div><div><i style="background:#fff;outline:1px solid #ccd"></i>Outras trilhas</div><div><i style="background:#0B1726;height:8px;width:8px;border-radius:50%"></i>No roteiro</div><div style="opacity:.65">Relevo real · altura ${EXAG}×</div>`;
   el.appendChild(leg);
   ctrl.addEventListener('click', e => {
     const b = e.target.closest('[data-b]'); if (!b) return;
@@ -194,7 +195,7 @@ export async function montarIlha(el, { abrirLugar, abrirTrilha, chips }) {
   /* ---------- chips das trilhas */
   let selecionada = null;
   if (chips) {
-    chips.innerHTML = trilhas.map(t => `<button data-t="${t.id}" class="">${t.roteiro ? '⭐ ' : ''}${t.nome}</button>`).join('');
+    chips.innerHTML = trilhas.map(t => `<button data-t="${t.id}" class="${t.roteiro ? 'rot' : ''}"><i></i>${t.nome}</button>`).join('');
     chips.onclick = e => {
       const b = e.target.closest('[data-t]'); if (!b) return;
       const t = trilhas.find(x => x.id === b.dataset.t);
